@@ -2,14 +2,7 @@
 /*
  Plugin Name: BEA - Media Analytics Addon for media in css
  Version: 0.1
- Plugin URI: 
  Description: BEA - Media Analytcs Addon that founds media in css
- Author: 
- Author URI:
- Domain Path: 
- Text Domain: 
- Contributors: 
-
  */
 
 // don't load directly
@@ -18,6 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 add_action( 'admin_init', 'add_media_indexing_button' );
+
 
 /**
  * Add option page for media index
@@ -105,3 +99,24 @@ class Main {
 		add_filter( 'bea.media_analytics.helper.get_media.post_content', [ $this, 'get_media_from_url' ], 10, 2 );
 	}
 }
+
+
+
+/**
+ * Activate the plugin.
+ */
+function pluginprefix_activate() { 
+    add_media_indexing_button();
+	// Clear the permalinks after the post type has been registered.
+	flush_rewrite_rules();
+}
+register_activation_hook( __FILE__, 'pluginprefix_activate' );
+
+/**
+ * Deactivation hook.
+ */
+function pluginprefix_deactivate() {
+	// Clear the permalinks to remove our post type's rules from the database.
+	flush_rewrite_rules();
+}
+register_deactivation_hook( __FILE__, 'pluginprefix_deactivate' );
