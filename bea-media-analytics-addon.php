@@ -1,9 +1,12 @@
 <?php
 /*
- Plugin Name: BEA - Media Analytics Addon for media in css
- Version: 0.1
- Description: BEA - Media Analytcs Addon that founds media in css
- */
+Plugin Name: BEA - Media Analytics Addon for media in css
+Plugin URI: https://www.perfectogroupe.fr/
+Description: BEA - Media Analytcs Addon that founds media in css
+Author: Perfecto Tech
+Version: 1.0
+Author URI: https://www.perfectogroupe.fr/
+*/
 
 // don't load directly
 if ( ! defined( 'ABSPATH' ) ) {
@@ -52,7 +55,7 @@ class Helper {
 		}
 
 		// match all url="" from img html
-		preg_match_all( `/"url":\s*"(https?:\/\/[^\s"']+)"/gi`, $text, $images );
+		preg_match_all('/"url":\s*"(https?:\/\/[^\s"\'\\\\]+)"/i', $text, $images);
 		if ( empty( $images ) ) {
 			return [];
 		}
@@ -99,24 +102,3 @@ class Main {
 		add_filter( 'bea.media_analytics.helper.get_media.post_content', [ $this, 'get_media_from_url' ], 10, 2 );
 	}
 }
-
-
-
-/**
- * Activate the plugin.
- */
-function pluginprefix_activate() { 
-    add_media_indexing_button();
-	// Clear the permalinks after the post type has been registered.
-	flush_rewrite_rules();
-}
-register_activation_hook( __FILE__, 'pluginprefix_activate' );
-
-/**
- * Deactivation hook.
- */
-function pluginprefix_deactivate() {
-	// Clear the permalinks to remove our post type's rules from the database.
-	flush_rewrite_rules();
-}
-register_deactivation_hook( __FILE__, 'pluginprefix_deactivate' );
