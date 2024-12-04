@@ -22,14 +22,14 @@ add_action( 'admin_init', 'add_media_indexing_button' );
 function add_media_indexing_button(): void {
     add_settings_section(
         'media_indexing',
-        __( 'Media Indexing' ),
+    	( 'Media Indexing' ),
         '__return_null',
         'media'
     );
 
     add_settings_field(
         'media_indexing_button',
-        __( 'Trigger indexing' ),
+        ( 'Trigger indexing' ),
         static function() {
             if ( isset( $_GET['force_media_index'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification
                 BEA\Media_Analytics\Main::get_instance()->force_indexation();
@@ -48,57 +48,54 @@ function add_media_indexing_button(): void {
     );
 }
 
-class Helper {
-    static function get_media_from_url($text) {
-		if ( empty( $text ) ) {
-			return [];
-		}
+// Found the media in url:https://...
+function get_media_from_url($media_ids) {
 
-		// match all url="" from img html
-		preg_match_all('/"url":\s*"(https?:\/\/[^\s"\'\\\\]+)"/i', $text, $images);
-		if ( empty( $images ) ) {
-			return [];
-		}
-
-		// Loop on medias to get ID instead URL
-		$medias = array_map( [ 'BEA\Media_Analytics\Helper\Helper', 'get_id_from_url' ], $images[1] );
-		return array_filter( $medias );
+	if ( empty( $media_ids ) ) {
+		error_log('$text is empty');
+		return [];
 	}
-    static function get_id_from_url( $attachment_url ) {
-		global $wpdb;
+	
 
-		// If there is no url, return.
-		if ( '' == $attachment_url ) {
-			return 0;
-		}
+	// match all url="" from img html
+	preg_match_all('/"url":"https?:\/\/[^\s"]+/', $media_ids, $images);
+	if ( empty( $images ) ) {
+		error_log('image is empty');
+		return [];
+	}
 
-		// Get the upload directory paths
-		$upload_dir_paths = wp_upload_dir();
+	// Loop on medias to get ID instead URL
+	$medias = array_map( 'get_id_from_url', $images[1] );
+	error_log('Image found in url:');
+	return array_filter( $medias );
+}
 
-		// Make sure the upload path base directory exists in the attachment URL, to verify that we're working with a media library image
-		if ( false !== strpos( $attachment_url, $upload_dir_paths['baseurl'] ) ) {
-			// If this is the URL of an auto-generated thumbnail, get the URL of the original image
-			$attachment_url = preg_replace( '/-\d+x\d+(?=\.(jpg|jpeg|png|gif)$)/i', '', $attachment_url );
+function get_id_from_url( $attachment_url ) {
+	error_log('get_id_from_url is executed');
+	global $wpdb;
 
-			// Remove the upload path base directory from the attachment URL
-			$attachment_url = str_replace( $upload_dir_paths['baseurl'] . '/', '', $attachment_url );
-
-			// Finally, run a custom database query to get the attachment ID from the modified attachment URL
-			return (int) $wpdb->get_var( $wpdb->prepare( "SELECT wposts.ID FROM $wpdb->posts wposts, $wpdb->postmeta wpostmeta WHERE wposts.ID = wpostmeta.post_id AND wpostmeta.meta_key = '_wp_attached_file' AND wpostmeta.meta_value = '%s' AND wposts.post_type = 'attachment'", $attachment_url ) );
-		}
-
+	// If there is no url, return.
+	if ( '' == $attachment_url ) {
 		return 0;
 	}
-}
 
-class Main {
-	/**
-	 * Use the trait
-	 */
-	use Singleton;
+	// Get the upload directory paths
+	$upload_dir_paths = wp_upload_dir();
 
-	protected function init() {
-		// Indexation
-		add_filter( 'bea.media_analytics.helper.get_media.post_content', [ $this, 'get_media_from_url' ], 10, 2 );
+	// Make sure the upload path base directory exists in the attachment URL, to verify that we're working with a media library image
+	if ( false !== strpos( $attachment_url, $upload_dir_paths['baseurl'] ) ) {
+		// If this is the URL of an auto-generated thumbnail, get the URL of the original image
+		$attachment_url = preg_replace( '/-\d+x\d+(?=\.(jpg|jpeg|png|gif)$)/i', '', $attachment_url );
+
+		// Remove the upload path base directory from the attachment URL
+		$attachment_url = str_replace( $upload_dir_paths['baseurl'] . '/', '', $attachment_url );
+
+		// Finally, run a custom database query to get the attachment ID from the modified attachment URL
+		return (int) $wpdb->get_var( $wpdb->prepare( "SELECT wposts.ID FROM $wpdb->posts wposts, $wpdb->postmeta wpostmeta WHERE wposts.ID = wpostmeta.post_id AND wpostmeta.meta_key = '_wp_attached_file' AND wpostmeta.meta_value = %s AND wposts.post_type = 'attachment'", $attachment_url ) );
 	}
+	return 0;
 }
+
+// Indexation
+add_filter( 'bea.media_analytics.helper.get_media.post_content', 'get_media_from_url', 10, 2 );
+
