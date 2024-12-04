@@ -65,17 +65,16 @@ function get_media_from_url($media_ids) {
 	}
 
 	// Loop on medias to get ID instead URL
-	$medias = array_map( 'get_id_from_url', $images[1] );
-	error_log('Image found in url:');
+	$medias = array_map( 'get_id_from_url', $images );
 	return array_filter( $medias );
 }
 
 function get_id_from_url( $attachment_url ) {
-	error_log('get_id_from_url is executed');
 	global $wpdb;
 
 	// If there is no url, return.
 	if ( '' == $attachment_url ) {
+		error_log('$attachment_url is empty');
 		return 0;
 	}
 
@@ -96,6 +95,11 @@ function get_id_from_url( $attachment_url ) {
 	return 0;
 }
 
+function get_media_from_urls( $media_ids, $post_content ) {
+	error_log('media fetched from url');
+	return array_merge( $media_ids, get_media_from_url( $post_content ) );
+}
+
 // Indexation
-add_filter( 'bea.media_analytics.helper.get_media.post_content', 'get_media_from_url', 10, 2 );
+add_filter( 'bea.media_analytics.helper.get_media.post_content', 'get_media_from_urls', 10, 2 );
 
