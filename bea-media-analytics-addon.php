@@ -69,7 +69,7 @@ function get_id_from_url( $attachment_url ) {
 
 		// Remove the upload path base directory from the attachment URL
 		$attachment_url = str_replace( $upload_dir_paths['baseurl'] . '/', '', $attachment_url );
-		error_log('$attachment_url');
+		error_log('$attachment_url turned too string');
 		// Finally, run a custom database query to get the attachment ID from the modified attachment URL
 		return (int) $wpdb->get_var( $wpdb->prepare( "SELECT wposts.ID FROM $wpdb->posts wposts, $wpdb->postmeta wpostmeta WHERE wposts.ID = wpostmeta.post_id AND wpostmeta.meta_key = '_wp_attached_file' AND wpostmeta.meta_value = %s AND wposts.post_type = 'attachment'", $attachment_url ) );
 	}
