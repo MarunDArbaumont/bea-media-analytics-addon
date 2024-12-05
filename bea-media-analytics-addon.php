@@ -54,13 +54,14 @@ function get_id_from_url( $attachment_url ) {
 
 	// If there is no url, return.
 	if ( '' == $attachment_url ) {
-		error_log('$attachment_url is empty');
+		error_log(var_export($attachment_url, true));
 		return 0;
 	}
 
 	// Get the upload directory paths
 	$upload_dir_paths = wp_upload_dir();
-
+	$attachment_url = implode($attachment_url);
+	error_log(var_export($attachment_url, true));
 	// Make sure the upload path base directory exists in the attachment URL, to verify that we're working with a media library image
 	if ( false !== strpos( $attachment_url, $upload_dir_paths['baseurl'] ) ) {
 		
@@ -69,7 +70,7 @@ function get_id_from_url( $attachment_url ) {
 
 		// Remove the upload path base directory from the attachment URL
 		$attachment_url = str_replace( $upload_dir_paths['baseurl'] . '/', '', $attachment_url );
-		error_log('$attachment_url turned too string');
+		
 		// Finally, run a custom database query to get the attachment ID from the modified attachment URL
 		return (int) $wpdb->get_var( $wpdb->prepare( "SELECT wposts.ID FROM $wpdb->posts wposts, $wpdb->postmeta wpostmeta WHERE wposts.ID = wpostmeta.post_id AND wpostmeta.meta_key = '_wp_attached_file' AND wpostmeta.meta_value = %s AND wposts.post_type = 'attachment'", $attachment_url ) );
 	}
@@ -104,4 +105,3 @@ function get_media_from_urls( $media_ids, $post_content ) {
 
 // Indexation
 add_filter( 'bea.media_analytics.helper.get_media.post_content', 'get_media_from_urls', 10, 2 );
-
