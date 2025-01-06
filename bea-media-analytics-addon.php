@@ -54,25 +54,20 @@ function get_id_from_url( $attachment_url ) {
 
 	// If there is no url, return.
 	if ( '' == $attachment_url ) {
-		error_log(var_export($attachment_url, true));
+
 		return 0;
 	}
 
 	// Get the upload directory paths
 	$upload_dir_paths = wp_upload_dir();
 	$attachment_url = implode($attachment_url);
-	error_log(var_export($attachment_url, true));
 	// Make sure the upload path base directory exists in the attachment URL, to verify that we're working with a media library image
 	if ( false !== strpos( $attachment_url, $upload_dir_paths['baseurl'] ) ) {
 		
-		// If this is the URL of an auto-generated thumbnail, get the URL of the original image
-		$attachment_url = preg_replace( '/-\d+x\d+(?=\.(jpg|jpeg|png|gif)$)/i', '', $attachment_url );
-
-		// Remove the upload path base directory from the attachment URL
-		$attachment_url = str_replace( $upload_dir_paths['baseurl'] . '/', '', $attachment_url );
-		
-		// Finally, run a custom database query to get the attachment ID from the modified attachment URL
-		return (int) $wpdb->get_var( $wpdb->prepare( "SELECT wposts.ID FROM $wpdb->posts wposts, $wpdb->postmeta wpostmeta WHERE wposts.ID = wpostmeta.post_id AND wpostmeta.meta_key = '_wp_attached_file' AND wpostmeta.meta_value = %s AND wposts.post_type = 'attachment'", $attachment_url ) );
+		// Returns the ID of the image 
+		$attachment_url = substr($attachment_url, 7);
+		$attachment_url = attachment_url_to_postid($attachment_url);
+		return $attachment_url;
 	}
 	return 0;
 }
@@ -81,25 +76,26 @@ function get_id_from_url( $attachment_url ) {
 function get_media_from_url($media_ids) {
 
 	if ( empty( $media_ids ) ) {
-		error_log('$text is empty');
 		return [];
 	}
+	error_log(var_export($media_ids, true));
 	
 
 	// match all url="" from img html
 	preg_match_all('/"url":"https?:\/\/[^\s"]+/', $media_ids, $images);
 	if ( empty( $images ) ) {
-		error_log('image is empty');
 		return [];
 	}
 
-	// Loop on medias to get ID instead URL
+	error_log(var_export($images, true));
 	$medias = array_map( 'get_id_from_url', $images );
+	error_log(var_export($medias, true));
 	return array_filter( $medias );
 }
 
 function get_media_from_urls( $media_ids, $post_content ) {
-	error_log('media fetched from url');
+	error_log(var_export($media_ids, true));
+
 	return array_merge( $media_ids, get_media_from_url( $post_content ) );
 }
 
