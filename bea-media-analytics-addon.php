@@ -60,14 +60,15 @@ function get_id_from_url( $attachment_url ) {
 
 	// Get the upload directory paths
 	$upload_dir_paths = wp_upload_dir();
-	error_log(var_export($attachment_url, true));
-	// $attachment_url = implode($attachment_url);
+	// If the attachement url contains -1600x900 because it has been resized -> to ignore it 
+	if(str_contains($attachment_url, '-1600x900')){
+		$attachment_url = preg_replace( '/\-\d+x\d+\.(jpe?g|png|gif|pdf)$/', '.$1', $attachment_url );
+	}
 	// Make sure the upload path base directory exists in the attachment URL, to verify that we're working with a media library image
 	if ( false !== strpos( $attachment_url, $upload_dir_paths['baseurl'] ) ) {
 		
 		// Returns the ID of the image 
 		$attachment_url = substr($attachment_url, 7);
-		error_log('attachement_url: '.var_export($attachment_url, true));
 		$attachment_url = attachment_url_to_postid($attachment_url);
 		return $attachment_url;
 	}
@@ -80,24 +81,17 @@ function get_media_from_url($media_ids) {
 	if ( empty( $media_ids ) ) {
 		return [];
 	}
-	error_log(var_export('content start '.$media_ids, true));
-	
-
 	// match all url="" from img html
-	preg_match_all('/"url":"https?:\/\/[^\s"]+/', $media_ids, $images);
+	preg_match_all('/"url":"https?:\/\/[^\s"]+\.(png|pdf|jpg|jpeg)/', $media_ids, $images);
 	if ( empty( $images ) ) {
 		return [];
 	}
 
-	error_log('en plus '.var_export($images, true));
 	$medias = array_map( 'get_id_from_url', $images[0] );
-	error_log('id '.var_export($medias, true));
 	return array_filter( $medias );
 }
 
 function get_media_from_urls( $media_ids, $post_content ) {
-	error_log('avant '.var_export($media_ids, true));
-
 	return array_merge( $media_ids, get_media_from_url( $post_content ) );
 }
 
